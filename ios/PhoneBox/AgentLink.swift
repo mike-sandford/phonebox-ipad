@@ -33,8 +33,18 @@ final class AgentLink: @unchecked Sendable {
         return _route
     }
 
+    // NSLock is only taken in these synchronous helpers: Swift does not allow lock()/unlock() in async functions.
     private func setRoute(_ r: Route) {
         lock.lock(); _route = r; lock.unlock()
+    }
+
+    private func notePreferredHost(_ index: Int, for id: String) {
+        let stillActive = store.active?.id == id
+        lock.lock(); if stillActive { preferredHost = index }; lock.unlock()
+    }
+
+    private func resetPreferredHost() {
+        lock.lock(); preferredHost = 0; lock.unlock()
     }
 
     /// One URLSession per pinned certificate, so HTTPS connections are kept alive between requests.
@@ -68,7 +78,7 @@ final class AgentLink: @unchecked Sendable {
 
     func select(_ id: String) -> Bool {
         guard store.select(id) else { return false }
-        lock.lock(); preferredHost = 0; lock.unlock()
+        resetPreferredHost()
         return true
     }
 
@@ -124,7 +134,7 @@ final class AgentLink: @unchecked Sendable {
             do {
                 let (data, response) = try await session.data(for: req)
                 guard let http = response as? HTTPURLResponse else { return .unexpected }
-                lock.lock(); if store.active?.id == pc.id { preferredHost = i }; lock.unlock()
+                notePreferredHost(i, for: pc.id)
                 setRoute(.wifi)
                 if !(100...599).contains(http.statusCode) || (300...399).contains(http.statusCode) { return .unexpected }
                 return Reply(status: http.statusCode, contentType: http.value(forHTTPHeaderField: "Content-Type"), body: data)
@@ -147,7 +157,7 @@ final class AgentLink: @unchecked Sendable {
             do {
                 let (bytes, response) = try await session.bytes(for: req)
                 guard (response as? HTTPURLResponse)?.statusCode == 200 else { bytes.task.cancel(); continue }
-                lock.lock(); if store.active?.id == pc.id { preferredHost = i }; lock.unlock()
+                notePreferredHost(i, for: pc.id)
                 setRoute(.wifi)
                 return bytes
             } catch {
@@ -212,7 +222,7 @@ final class AgentLink: @unchecked Sendable {
                             port: (j["port"] as? Int) ?? link.port, token: token,
                             macs: macs ?? store.all.first { $0.id == id }?.macs ?? [])
                 store.upsert(pc)
-                lock.lock(); preferredHost = 0; lock.unlock()
+                resetPreferredHost()
                 return nil
             } catch let e as URLError where Self.certificateErrors.contains(e.code) {
                 problem = .wrongCertificate(pc: link.pc)

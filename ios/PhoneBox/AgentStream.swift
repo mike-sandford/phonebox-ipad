@@ -21,14 +21,17 @@ final class AgentStream {
         generation += 1
         let gen = generation
         let link = self.link
-        task = Task.detached { [weak self] in
+        let owner = WeakBox(self)
+        task = Task.detached {
             await AgentStream.loop(link: link) { event, data in
-                await MainActor.run {
-                    guard let self, self.generation == gen, self.task != nil else { return }
-                    self.deliver(event, data)
-                }
+                await MainActor.run { owner.value?.emit(gen: gen, event: event, data: data) }
             }
         }
+    }
+
+    private func emit(gen: Int, event: String, data: String) {
+        guard generation == gen, task != nil else { return }
+        deliver(event, data)
     }
 
     func stop() {
@@ -80,6 +83,12 @@ final class AgentStream {
             try? await Task.sleep(nanoseconds: opened ? 300_000_000 : 2_000_000_000)
         }
     }
+}
+
+/// A weak reference that can cross into the stream's background task.
+final class WeakBox<T: AnyObject>: @unchecked Sendable {
+    weak var value: T?
+    init(_ value: T) { self.value = value }
 }
 
 /// The trackpad widget's moves, as POST /api/trackpad (JSON). One request at a time; while one is in flight, moves and
