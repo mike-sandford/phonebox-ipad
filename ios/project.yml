@@ -1,0 +1,43 @@
+# XcodeGen spec for the PhoneBox iPad shell. Generate the Xcode project on the Mac with ./setup.sh
+# (installs nothing itself; needs `brew install xcodegen`). The generated PhoneBox.xcodeproj is not committed.
+name: PhoneBox
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+targets:
+  PhoneBox:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    configFiles:                           # Team ID and bundle identifier (see Signing.xcconfig.example)
+      Debug: Signing.xcconfig
+      Release: Signing.xcconfig
+    sources:
+      - path: PhoneBox
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        INFOPLIST_FILE: PhoneBox/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "2"          # iPad only
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        CODE_SIGN_STYLE: Automatic
+        # the www copy step below reads ../android, outside the sandbox Xcode gives build scripts
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    postCompileScripts:
+      - name: Copy panel (android/.../assets/www)
+        basedOnDependencyAnalysis: false
+        script: |
+          # The panel is never hand-copied: every build takes it fresh from the Android app's assets.
+          set -euo pipefail
+          SRC="${SRCROOT}/../android/app/src/main/assets/www/"
+          DST="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/www/"
+          if [ ! -f "${SRC}index.html" ]; then echo "error: panel not found at ${SRC}"; exit 1; fi
+          mkdir -p "${DST}"
+          rsync -a --delete "${SRC}" "${DST}"
