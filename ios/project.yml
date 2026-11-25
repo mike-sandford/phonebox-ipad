@@ -26,6 +26,7 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         TARGETED_DEVICE_FAMILY: "2"          # iPad only
         MARKETING_VERSION: 0.1.0
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CURRENT_PROJECT_VERSION: 1
         CODE_SIGN_STYLE: Automatic
         # the www copy step below reads ../android, outside the sandbox Xcode gives build scripts

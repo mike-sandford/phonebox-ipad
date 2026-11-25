@@ -128,12 +128,12 @@ post to a `WKScriptMessageHandler`. The handler also checks `message.frameInfo.i
 | `setPinned(on)` | screen pinning | no-op (use Single App Mode / Guided Access) |
 | `setHomeScreen(on)` | home launcher alias | no-op |
 | `setVolumeKeys(on)` | volume keys flip pages | no-op (iOS gives apps no volume key events) |
-| `setStandby(mode, grace)` | release keep-awake when the PC is gone | phase 2 (idle timer) |
+| `setStandby(mode, grace)` | release keep-awake when the PC is gone | black cover + lowest backlight after the grace period, back by itself (an app cannot wake a locked iPad), a tap shows the panel for 30 s |
 | `setLanguage(tag)` | remembers for pairing dialogs | stored only |
 | `transport()` | `usb` / `wifi` / `none` | `wifi` / `none` |
 | `sensors()` | light, proximity | `{"light":false,"proximity":false}` (no public API) |
 | `version()` | versionName | `CFBundleShortVersionString` |
-| `canListen/listen/stopListening/cancelListening` | Android speech | phase 2 (`SFSpeechRecognizer`) |
+| `canListen/listen/stopListening/cancelListening` | Android speech | `SFSpeechRecognizer`; the shim numbers the sessions so `listen` can answer at once; 2 s of quiet after speech ends a session |
 | `trackpad(type,dx,dy,delta)` | WebSocket, else coalesced POST | coalesced `POST /api/trackpad` JSON |
 | `canWake()` / `wakePc(id)` | Wake-on-LAN broadcast | `false` (UDP broadcast needs Apple's multicast entitlement) |
 

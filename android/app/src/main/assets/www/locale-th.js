@@ -863,7 +863,7 @@ window.PhoneBoxLocaleData = Object.assign(window.PhoneBoxLocaleData || {}, {
       "s.js.pushHint": "ส่งข้อมูลด้วย POST /api/push/ <key> - ลองดูในส่วน Webhooks",
       "s.js.blankPage": "หน้าว่าง",
       "s.js.blankPageHint": "เริ่มจากกริดที่ว่าง",
-      "s.wifi.step1": "1. ติดตั้งแอพพลิเคชัน (ข้ามหากมันถูกติดตั้งแล้ว)",
+      "s.wifi.step1": "1. Android · ติดตั้งแอพพลิเคชัน (ข้ามหากมันถูกติดตั้งแล้ว)",
       "s.wifi.step1Hint": "ดาวน์โหลดแอพ PhoneBox Android จะถามครั้งเดียวเพื่ออนุญาตให้ติดตั้งแอพจากเบราว์เซอร์",
       "s.wifi.step2": "2.สแกนนี่ด้วยกล้องมือถือ",
       "s.wifi.step2Hint": "เปิดลิงก์ที่แสดง และเลือก PhoneBox มือถือจะถามคุณให้ยืนยันรหัส ",

@@ -10,6 +10,7 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
     private lazy var schemeHandler = PanelSchemeHandler(link: link)
     private lazy var stream = AgentStream(link: link) { [weak self] event, data in
         guard let self else { return }
+        if event != "close" { self.standby.noteAnswer() } // "state" arrives every second while the agent is there
         if event == "open" || event == "close" { self.pushHostState() }
         self.callPanel("window.onAgentStream && window.onAgentStream(\(Bridge.jsString(event)), \(Bridge.jsString(data)))")
     }
@@ -20,6 +21,8 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
     private var orientationMask: UIInterfaceOrientationMask = .landscape
     private var launchBrightness: CGFloat?
     private let pairingBanner = UIButton(type: .system)
+    private lazy var dictation = Dictation { [weak self] js in self?.callPanel(js) }
+    private lazy var standby = Standby { [weak self] in self?.link.store.active != nil }
 
     private let defaults = UserDefaults.standard
 
@@ -61,6 +64,7 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
         schemeHandler.onAgentAnswer = { [weak self] in self?.noteAgentAnswer() }
 
         setUpPairingBanner()
+        standby.attach(to: view) // above the panel and the banner
         // three fingers held for a second: the app's own menu (pair, computers, reload) in a kiosk with no other chrome
         let menu = UILongPressGestureRecognizer(target: self, action: #selector(showAppMenu(_:)))
         menu.numberOfTouchesRequired = 3
@@ -89,12 +93,14 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
             "pcs": link.pcsJSON(),
             "transport": link.route.rawValue,
             "version": HostInfo.appVersion,
+            "canListen": dictation.available,
         ]
         return Bridge.json(snapshot)
     }
 
     /// (Re)loads the panel with a fresh bootstrap script (the key and the host snapshot at document start).
     private func loadPanel() {
+        dictation.cancel(id: 0) // a new page counts its sessions from 1 again
         let ucc = web.configuration.userContentController
         ucc.removeAllUserScripts()
         let script = Bridge.bootstrapScript(key: bridgeKey, languages: Locale.preferredLanguages, snapshot: hostSnapshot())
@@ -115,7 +121,7 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
     @objc private func batteryChanged() { pushHostState() }
 
     private func noteAgentAnswer() {
-        // standby (release the screen when the computer is gone) is phase 2; for now every answer is just a sign of life
+        standby.noteAnswer()
     }
 
     /// Called by the scene: the panel can (not) be seen. Android: onResume / onPause.
@@ -126,12 +132,15 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
         if on {
             callPanel("window.onAppPause && window.onAppPause(false)") // the panel catches up at once
             stream.start()
+            standby.setRunning(true)
             pushHostState()
             hostStateTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.pushHostState() }
         } else {
             hostStateTimer?.invalidate()
             hostStateTimer = nil
             stream.stop()
+            standby.setRunning(false)
+            dictation.cancel(id: 0) // the microphone never stays open behind another app
             callPanel("window.onAppPause && window.onAppPause(true)")
         }
     }
@@ -158,10 +167,10 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
         case "setBrightness":
             guard let value = (args.first as? NSNumber)?.doubleValue, let screen = view.window?.windowScene?.screen else { return }
             if value < 0 {
-                if let b = launchBrightness { screen.brightness = b; launchBrightness = nil } // back to the user's setting
+                if let b = launchBrightness { standby.setBrightness(b, on: screen); launchBrightness = nil } // the user's setting
             } else {
-                if launchBrightness == nil { launchBrightness = screen.brightness }
-                screen.brightness = CGFloat(min(max(value, 0.01), 1))
+                if launchBrightness == nil { launchBrightness = standby.brightness(of: screen) }
+                standby.setBrightness(CGFloat(min(max(value, 0.01), 1)), on: screen)
             }
         case "setOrientation":
             let mode = args.first as? String ?? "landscape"
@@ -170,7 +179,15 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
         case "setLanguage":
             if let tag = args.first as? String { defaults.set(tag, forKey: "language") }
         case "setStandby":
-            if let mode = args.first as? String { defaults.set(mode, forKey: "standby") } // phase 2
+            guard let mode = args.first as? String else { return }
+            standby.configure(mode: mode, graceSeconds: (args.dropFirst().first as? NSNumber)?.intValue ?? 30)
+        case "listen":
+            guard args.count == 3, let id = (args[0] as? NSNumber)?.intValue, id > 0 else { return }
+            dictation.start(id: id, lang: args[1] as? String ?? "", offline: (args[2] as? Bool) ?? false)
+        case "stopListening":
+            if let id = (args.first as? NSNumber)?.intValue { dictation.stop(id: id) }
+        case "cancelListening":
+            if let id = (args.first as? NSNumber)?.intValue { dictation.cancel(id: id) }
         case "trackpad":
             guard args.count == 4, let type = args[0] as? String else { return }
             let n = args.dropFirst().map { ($0 as? NSNumber)?.doubleValue ?? 0 }

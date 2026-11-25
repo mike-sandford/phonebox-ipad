@@ -46,6 +46,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The Dictation widget listens while its microphone button is on, so what you say can be typed on the computer.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>The Dictation widget turns what you say into text for the computer. Nothing is stored.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>The camera scans the pairing QR code shown in the PhoneBox settings on your computer.</string>
 

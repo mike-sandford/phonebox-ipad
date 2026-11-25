@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+**iPad**
+- A native iPad app (`ios/`), the iPad counterpart of the Android app: the same panel full screen, paired over Wi-Fi
+  with the pairing QR code, the agent's certificate pinned. Standby and Dictation work as on Android; see
+  `ios/README.md` for what an iPad cannot do. The Wi-Fi pairing dialog now marks the app download QR code as Android.
+
 **Widgets**
 - Discord on Windows: **Choose on PC** (screen share) brings Discord's window to the front. Discord draws its picker
   inside its own window, so with Discord minimized, behind other windows or in the tray the button seemed to do

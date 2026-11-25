@@ -863,7 +863,7 @@ window.PhoneBoxLocaleData = Object.assign(window.PhoneBoxLocaleData || {}, {
       "s.js.pushHint": "用POST /api/push/ 發送資料<key> 請參閱Webhooks部分。",
       "s.js.blankPage": "空白頁",
       "s.js.blankPageHint": "從一個空格開始 。",
-      "s.wifi.step1": "1. 安裝應用程式(如果已安裝,請跳過)",
+      "s.wifi.step1": "1. Android · 安裝應用程式(如果已安裝,請跳過)",
       "s.wifi.step1Hint": "下載 PhoneBox 應用程式。 Android 會提示一次允許從瀏覽器安裝應用程式",
       "s.wifi.step2": "2. 用手機的相機掃描",
       "s.wifi.step2Hint": "打開它顯示的連結 ， 然後選擇 PhoneBox電話會要求你確認密碼 ",

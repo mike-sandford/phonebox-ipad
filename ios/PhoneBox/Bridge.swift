@@ -21,6 +21,7 @@ enum Bridge {
           window.__phoneboxLanguages = \(langs);
           window.__phoneboxHost = \(snapshot);
           function host() { return window.__phoneboxHost || {}; }
+          var speechId = 0; // listen() must answer at once, so the session ids are counted here
           function post(m, args) {
             try { window.webkit.messageHandlers.\(handlerName).postMessage({ key: key, m: m, args: args }); } catch (_) {}
           }
@@ -39,6 +40,15 @@ enum Bridge {
             transport: function (k) { return k === key ? (host().transport || 'none') : ''; },
             sensors: function (k) { return k === key ? '{"light":false,"proximity":false}' : '{}'; },
             version: function (k) { return k === key ? (host().version || '') : ''; },
+            canListen: function (k) { return k === key && host().canListen === true; },
+            listen: function (k, lang, offline) {
+              if (k !== key) return 0;
+              speechId += 1;
+              post('listen', [speechId, String(lang || ''), offline === true]);
+              return speechId;
+            },
+            stopListening: function (k, id) { if (k === key) post('stopListening', [Number(id) || 0]); },
+            cancelListening: function (k, id) { if (k === key) post('cancelListening', [Number(id) || 0]); },
             trackpad: function (k, type, dx, dy, delta) {
               if (k === key) post('trackpad', [String(type), Number(dx) || 0, Number(dy) || 0, Number(delta) || 0]);
             }
