@@ -145,6 +145,7 @@ textarea { width: 100%; resize: vertical; }
 .tpl:hover { border-color: var(--accent); }
 .tpl small { color: var(--muted); font-size: 12px; }
 .mini { aspect-ratio: 2.26; display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(6, 1fr); gap: 2px; background: #06080b; border-radius: 8px; padding: 4px; margin-bottom: 4px; }
+.mini.mini-tall { aspect-ratio: 1.6; }
 .mini span { background: #1f2937; border-radius: 3px; display: grid; place-items: center; font-size: 12px; overflow: hidden; }
 .empty-mini { display: grid; place-items: center; font-size: 28px; color: #64748b; }
 /* webhooks */
@@ -2312,17 +2313,25 @@ function plexPlaylistsEditor(w, o, set) {
 }
 
 // ---- template picker: new page (index null) or replace the widgets of page <index>
-function miniMap(widgets) {
-  return h('div', { class: 'mini' }, ...widgets.map((w) => {
+function miniMap(widgets, rows = 6) {
+  const mini = h('div', { class: 'mini' + (rows > 6 ? ' mini-tall' : '') }, ...widgets.map((w) => {
     const b = h('span', {}, rich(widgetDef(w.type).icon));
     b.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
     return b;
   }));
+  if (rows > 6) mini.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  return mini;
 }
+
+// A template may carry a 12 × 10 "tablet" layout (templates.json) for a 4:3 tablet such as an iPad. The editor uses it
+// while it shows the Tablet screen with More rows on a tablet on; everywhere else the 12 × 6 phone layout applies.
+const TABLET_TEMPLATE_ROWS = 10;
+const templateLayout = (t) => (t?.tablet && editorScreen().rows >= TABLET_TEMPLATE_ROWS
+  ? { widgets: t.tablet, rows: TABLET_TEMPLATE_ROWS } : { widgets: t ? t.widgets : [], rows: 6 });
 
 function openTemplates(index) {
   const pick = (t) => {
-    const widgets = JSON.parse(JSON.stringify(t ? t.widgets : []));
+    const widgets = JSON.parse(JSON.stringify(templateLayout(t).widgets));
     // a template lists only what differs from the defaults; the rest is written out like for a widget added by hand
     for (const w of widgets) w.options = { ...defaultOptions(w.type), ...(w.options || {}) };
     if (index == null) {
@@ -2338,7 +2347,7 @@ function openTemplates(index) {
     h('h3', {}, index == null ? tc('New page') : tc('Replace the widgets of "{title}"').replace('{title}', () => cfg.pages[index].title)),
     h('div', { class: 'tpl-grid' },
       h('button', { class: 'tpl', onclick: () => pick(null) }, h('div', { class: 'mini empty-mini' }, icon('plus')), h('b', {}, t('s.js.blankPage')), h('small', {}, t('s.js.blankPageHint'))),
-      ...catalog.templates.map((t) => h('button', { class: 'tpl', onclick: () => pick(t) }, miniMap(t.widgets), h('b', {}, rich(`${t.icon} ${t.title}`)), h('small', {}, t.desc)))));
+      ...catalog.templates.map((t) => h('button', { class: 'tpl', onclick: () => pick(t) }, miniMap(templateLayout(t).widgets, templateLayout(t).rows), h('b', {}, rich(`${t.icon} ${t.title}`)), h('small', {}, t.desc)))));
   $('modal').hidden = false;
 }
 let onModalClose = null; // a dialog that has to clean up (the pairing code) sets this

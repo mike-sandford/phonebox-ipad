@@ -103,6 +103,9 @@
   [freefakesmile](https://github.com/freefakesmile)).
 
 **Panel**
+- Page templates for a 4:3 tablet such as an iPad: Home, Sessions, System, Music, Dashboard and Planner have a 12 × 10
+  layout as well. The layout editor offers it on the **Tablet** screen with Settings › Display › **More rows on a
+  tablet** on, so a new page fills the whole tablet instead of its top 6 rows; elsewhere the 12 × 6 layout stays.
 - Page bar: with many pages on a narrow phone, only the current page keeps its name, so the others are not cut to one
   letter. It happens only when a name would be cut, so tablets, monitors and the side bar keep every name (#553,
   [avery02072003-cmyk](https://github.com/avery02072003-cmyk)).
