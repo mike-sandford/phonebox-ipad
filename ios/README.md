@@ -51,3 +51,14 @@ Next:
 * App icon.
 * Not possible on iPad without special entitlements: Wake-on-LAN (UDP broadcast), volume keys, vibration, room-light
   and proximity sensors, home-screen replacement. The panel hides those features when the bridge lacks them.
+
+## Android-only bits in the agent to revisit
+
+Things the agent shows or does that assume an Android phone (to address later, all agent changes):
+
+* Settings › Wi-Fi › Pair a phone over Wi-Fi shows an "install the Android app" QR code (an APK link) beside the
+  pairing QR code.
+* The agent offers APK updates for the phone app; the iPad avoids them by sending `X-PhoneBox-App: ipad-<version>`.
+* Settings › General "install the phone app" and the USB / adb steps in `setup.sh` (use `--no-phone`).
+* "More rows on a tablet" (12 × 10 on the iPad) is not in release 0.9.29 yet; it needs the agent from source or the
+  next release.
