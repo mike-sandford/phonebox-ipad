@@ -27,6 +27,10 @@ final class Standby: NSObject {
     private var timer: Timer?
     /// The brightness to come back to (the panel may set a new one while the screen is dark).
     private var wakeBrightness: CGFloat?
+    /// The last brightness someone could read by, seen while the screen was lit: what waking comes back to when the
+    /// brightness before standby was already dim (the panel's night screen dims it while the computer is unreachable).
+    private var readableBrightness: CGFloat?
+    private static let readable: CGFloat = 0.15
 
     private let cover = UIView()
     private weak var host: UIView?
@@ -77,6 +81,7 @@ final class Standby: NSObject {
     /// The panel can (not) be seen. Hidden, nothing is watched and the screen is left as it was before standby.
     func setRunning(_ on: Bool) {
         running = on
+        if on, !asleep, let screen = host?.window?.windowScene?.screen { noteReadable(screen.brightness) }
         restart()
     }
 
@@ -139,6 +144,7 @@ final class Standby: NSObject {
 
     private func sleep() {
         guard !asleep, let screen = host?.window?.windowScene?.screen else { return }
+        noteReadable(screen.brightness)
         asleep = true
         wakeBrightness = screen.brightness
         screen.brightness = 0
@@ -150,11 +156,25 @@ final class Standby: NSObject {
         guard asleep else { return }
         asleep = false
         cover.isHidden = true
-        if let b = wakeBrightness, let screen = host?.window?.windowScene?.screen { screen.brightness = b }
+        guard let screen = host?.window?.windowScene?.screen else { wakeBrightness = nil; return }
+        var target = wakeBrightness ?? screen.brightness
+        if target < Self.readable { target = readableBrightness ?? 0.5 }
         wakeBrightness = nil
+        screen.brightness = target
+        // the panel reconnects and sets its own brightness right after; a second look puts back a screen still left dark
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard let self, !self.asleep, let screen = self.host?.window?.windowScene?.screen, screen.brightness < 0.02 else { return }
+            screen.brightness = target
+        }
+    }
+
+    private func noteReadable(_ b: CGFloat) {
+        if b >= Self.readable { readableBrightness = b }
     }
 
     @objc private func brightnessChanged(_ note: Notification) {
+        if !asleep, let screen = note.object as? UIScreen ?? host?.window?.windowScene?.screen { noteReadable(screen.brightness) }
         guard asleep, let screen = note.object as? UIScreen ?? host?.window?.windowScene?.screen, screen.brightness > 0 else { return }
         screen.brightness = 0
     }
