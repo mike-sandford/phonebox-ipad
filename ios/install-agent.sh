@@ -35,8 +35,8 @@ chmod +x "$app/PhoneBoxAgent"
 codesign --force --sign - "$app/PhoneBoxAgent" >/dev/null 2>&1 || true
 
 echo "Starting it…"
-launchctl bootstrap "gui/$(id -u)" "$plist"
-launchctl kickstart -k "$label"
+launchctl bootstrap "gui/$(id -u)" "$plist" 2>/dev/null || true
+launchctl kickstart -k "$label" 2>/dev/null || true
 sleep 3
 if lsof -nP -iTCP:8765 -sTCP:LISTEN >/dev/null 2>&1; then
   echo "Done: the agent from this repo is running (http://127.0.0.1:8765)."
