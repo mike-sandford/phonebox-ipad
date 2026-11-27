@@ -178,6 +178,6 @@ final class Dictation {
 
     private func emit(_ kind: String, _ text: String, _ id: Int) {
         guard id > 0 else { return }
-        send("window.onAndroidSpeech && window.onAndroidSpeech(\(Bridge.jsString(kind)), \(Bridge.jsString(String(text.prefix(Self.maxChars))))), \(id))")
+        send("window.onAndroidSpeech && window.onAndroidSpeech(\(Bridge.jsString(kind)), \(Bridge.jsString(String(text.prefix(Self.maxChars)))), \(id))")
     }
 }
