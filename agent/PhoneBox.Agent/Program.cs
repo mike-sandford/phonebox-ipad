@@ -1029,11 +1029,12 @@ app.MapGet("/api/config", (ConfigStore cfg, HttpRequest req, ShortcutIconUploads
 {
     var settings = cfg.Get();
     var standby = req.HttpContext.Connection.LocalPort == usb.Port && usb.MatchesPhone(settings.DeviceSerial, req.Headers.Authorization);
+    var ownScreenStandby = req.Headers["X-PhoneBox-App"].ToString().StartsWith("ipad-", StringComparison.Ordinal);
     return Results.Json(new
     {
         version = cfg.Version.ToString(),
         config = settings.ToPublic(req.Headers["X-PhoneBox-Device"].ToString(),
-            s => icons.Revision(s.Id) is { } up ? (up, true) : (ShortcutIcons.Revision(s), false), wallpaper.Revision(), standby)
+            s => icons.Revision(s.Id) is { } up ? (up, true) : (ShortcutIcons.Revision(s), false), wallpaper.Revision(), standby, ownScreenStandby)
     });
 });
 

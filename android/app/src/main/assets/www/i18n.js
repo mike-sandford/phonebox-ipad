@@ -13295,11 +13295,29 @@
   function getPref() { return pref; }
   function getLocale() { return BY_CODE.get(active).locale; }
 
+  // The computer's system, as the agent last reported it (state.os): with a Mac, "PC not connected" says "Mac" instead,
+  // in the languages whose text names it "PC" (others keep their own word for the computer).
+  let hostOs = '';
+  try { hostOs = localStorage.getItem('pb-host-os') || ''; } catch (_) {}
+  function setHostOs(os) {
+    os = typeof os === 'string' ? os : '';
+    if (!os || os === hostOs) return false;
+    hostOs = os;
+    try { localStorage.setItem('pb-host-os', os); } catch (_) {}
+    return true;
+  }
+  const NOT_CONNECTED = new Set(['panel.pcNotConnected', 'panel.computerNotConnected']);
+  const PC_WORD = /\bPC\b|ПК/;
+
   function t(key, vars) {
     const dict = STRINGS[active] || STRINGS.en;
     let s = dict[key];
     if (s === undefined) s = STRINGS.en[key];
     if (s === undefined) return key;
+    if (hostOs === 'macos' && NOT_CONNECTED.has(key)) {
+      const pc = dict['panel.pcNotConnected'] ?? STRINGS.en['panel.pcNotConnected'];
+      if (PC_WORD.test(pc)) s = pc.replace(PC_WORD, 'Mac');
+    }
     if (vars) {
       for (const [k, v] of Object.entries(vars)) {
         const text = v == null ? '' : String(v);
@@ -13388,6 +13406,7 @@
     t,
     tc,
     tp,
+    setHostOs,
     applyDom,
     populateSelect,
   });

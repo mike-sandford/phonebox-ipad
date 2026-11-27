@@ -2703,6 +2703,7 @@ export function applyState(s, replayGen = null) {
   if (fresh || replayGen === evGen) for (const e of s.events || []) evOffer(e);
   if (!fresh) return replayGen === evGen;
   D.state = s;
+  if (I18n?.setHostOs?.(s.os)) I18n.applyDom(); // "Mac not connected" from now on, even after a restart offline
   media = mediaFrom(media, s.media);
   setOnline(true);
   if (s.cfgVersion !== undefined && cfgVersion !== null && s.cfgVersion !== cfgVersion) loadConfig();
