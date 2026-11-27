@@ -10,7 +10,7 @@ sends the key.
 
 ## 1. Pairing (QR code, no USB)
 
-The agent's settings page (Settings › Wi-Fi › "Pair a phone over Wi-Fi", local only: `POST /api/pair/start`) shows a QR
+The agent's settings page (Settings › Wi-Fi › "Pair a phone or iPad over Wi-Fi", local only: `POST /api/pair/start`) shows a QR
 code holding:
 
 ```
@@ -134,7 +134,7 @@ post to a `WKScriptMessageHandler`. The handler also checks `message.frameInfo.i
 | `sensors()` | light, proximity | `{"light":false,"proximity":false}` (no public API) |
 | `version()` | versionName | `CFBundleShortVersionString` |
 | `canListen/listen/stopListening/cancelListening` | Android speech | `SFSpeechRecognizer`; the shim numbers the sessions so `listen` can answer at once; 2 s of quiet after speech ends a session |
-| `trackpad(type,dx,dy,delta)` | WebSocket, else coalesced POST | coalesced `POST /api/trackpad` JSON |
+| `trackpad(type,dx,dy,delta)` | WebSocket, else coalesced POST | the same: `wss://…/api/trackpad` (pinned, with the key) while open, else coalesced `POST /api/trackpad` JSON |
 | `canWake()` / `wakePc(id)` | Wake-on-LAN broadcast | `false` (UDP broadcast needs Apple's multicast entitlement) |
 
 Callbacks the panel defines and the host may call: `onAgentStream`, `onAppPause`, `onAndroidKey('prev'|'next')`
@@ -143,8 +143,7 @@ Callbacks the panel defines and the host may call: `onAgentStream`, `onAppPause`
 
 ## 5. Known panel quirks on a non-Android host
 
-* `widgets/controls.js` (trackpad) opens `ws(s)://<location.host>/api/trackpad` unless the host name contains
-  `androidplatform.net`. Under the iPad's custom scheme that socket just fails and the widget falls back to
-  `bridge.trackpad`, retrying the socket every 2 s. Harmless; a one-line panel change can skip it later.
+* `widgets/controls.js` (trackpad) opens its own WebSocket only when the host has no `bridge.trackpad`, so on the
+  iPad the app's socket carries the moves.
 * The panel reports its battery with `POST /api/phone/battery`, which feeds the agent's charge guard. If the charge
   guard is set up for an Android phone, the iPad's reports will also reach it.

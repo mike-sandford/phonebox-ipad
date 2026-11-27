@@ -1020,6 +1020,7 @@ window.PhoneBoxLocaleData = Object.assign(window.PhoneBoxLocaleData || {}, {
       "s.pair.title": "{pc} के साथ फोन जोड़ें",
       "s.pair.qr": "जोड़ा QR कोड",
       "s.pair.downloadQr": "अनुप्रयोग डाउनलोड के लिए QR कोड",
+      "s.pair.showAndroidApp": "Android फ़ोन जोड़ रहे हैं? ऐप डाउनलोड दिखाएँ",
       "s.pair.hosts": "फोन {hosts} से पोर्ट {port} पर जुड़ेगा. कोड एक बार काम करता है,5मिनट के लिए. QR कोड में कुंजी नहीं है.",
       "s.pair.noHosts": "इस कम्प्यूटर पर कोई LAN या Tailscale पता नहीं मिला, अतः फोन में कनेक्ट करने के लिए कुछ भी नहीं है.",
       "s.pair.copy": "जोड़ी लिंक की नक़ल लें",

@@ -91,24 +91,39 @@ final class WeakBox<T: AnyObject>: @unchecked Sendable {
     init(_ value: T) { self.value = value }
 }
 
-/// The trackpad widget's moves, as POST /api/trackpad (JSON). One request at a time; while one is in flight, moves and
-/// scrolls of the same kind add up, like AgentLink.coalesceHttpTrackpad on Android.
+/// The trackpad widget's moves. Like Android (AgentLink.sendTrackpad), over a WebSocket to /api/trackpad while one is
+/// open, so moves are not held up by a request each; otherwise, and while the socket opens, as POST /api/trackpad (JSON),
+/// one request at a time: while one is in flight, moves and scrolls of the same kind add up.
 actor TrackpadSender {
     private struct Move { let type: String; var dx: Double; var dy: Double; var delta: Double }
 
     static let validTypes: Set<String> = ["move", "click", "rightClick", "mousedown", "mouseup", "scroll", "hscroll",
         "swipe3up", "swipe3down", "swipe3left", "swipe3right", "swipe4up", "swipe4down", "swipe4left", "swipe4right",
         "spread", "pinch"]
+    private static let retryAfter: TimeInterval = 3
+    private static let pingEvery: UInt64 = 20_000_000_000
 
     private let link: AgentLink
     private var inFlight = false
     private var pending: [Move] = []
+
+    private var socket: URLSessionWebSocketTask?
+    private var socketPc: String?
+    private var socketOpen = false
+    private var lastAttempt: TimeInterval = -.infinity
 
     init(link: AgentLink) { self.link = link }
 
     func send(type: String, dx: Double, dy: Double, delta: Double) {
         guard Self.validTypes.contains(type) else { return }
         let move = Move(type: type, dx: dx.isFinite ? dx : 0, dy: dy.isFinite ? dy : 0, delta: delta.isFinite ? delta : 0)
+        if let socket, socketPc != link.activeId { drop(socket) } // another computer was chosen
+        // a socket opened while HTTP requests were still queued waits for them, so a click cannot overtake a move
+        if socketOpen, let socket, !inFlight {
+            sendOverSocket(move, socket)
+            return
+        }
+        connectIfDue()
         if inFlight {
             if var last = pending.last, last.type == type, type == "move" || type == "scroll" {
                 last.dx += move.dx; last.dy += move.dy; last.delta += move.delta
@@ -122,13 +137,83 @@ actor TrackpadSender {
         Task { await drain(move) }
     }
 
+    /// The panel is hidden: nothing to send for a while.
+    func close() {
+        if let socket { drop(socket) }
+    }
+
+    private static func json(_ move: Move) -> Data? {
+        try? JSONSerialization.data(withJSONObject: ["type": move.type, "dx": move.dx, "dy": move.dy, "delta": move.delta])
+    }
+
     private func drain(_ first: Move) async {
         var next: Move? = first
         while let move = next {
-            let body = try? JSONSerialization.data(withJSONObject: ["type": move.type, "dx": move.dx, "dy": move.dy, "delta": move.delta])
-            _ = await link.request(method: "POST", pathAndQuery: "/api/trackpad", body: body, contentType: "application/json")
+            _ = await link.request(method: "POST", pathAndQuery: "/api/trackpad", body: Self.json(move), contentType: "application/json")
             next = pending.isEmpty ? nil : pending.removeFirst()
         }
         inFlight = false
+    }
+
+    // MARK: - WebSocket
+
+    private func sendOverSocket(_ move: Move, _ task: URLSessionWebSocketTask) {
+        guard let data = Self.json(move), let text = String(data: data, encoding: .utf8) else { return }
+        task.send(.string(text)) { [weak self] error in
+            guard error != nil, let self else { return }
+            Task { await self.drop(task) }
+        }
+    }
+
+    /// Opens a socket if none is open or opening, at most every few seconds (the agent may refuse it: no trackpad
+    /// widget with Control on). The first pong says the handshake went through.
+    private func connectIfDue() {
+        let now = ProcessInfo.processInfo.systemUptime
+        guard socket == nil, now - lastAttempt >= Self.retryAfter, let made = link.trackpadSocket() else { return }
+        lastAttempt = now
+        let task = made.task
+        socket = task
+        socketPc = made.pc
+        socketOpen = false
+        task.resume()
+        task.sendPing { [weak self] error in
+            guard let self else { return }
+            Task { if error == nil { await self.opened(task) } else { await self.drop(task) } }
+        }
+        receive(task)
+    }
+
+    private func opened(_ task: URLSessionWebSocketTask) {
+        guard task === socket else { return }
+        socketOpen = true
+        // a ping now and then keeps an idle socket from timing out, and finds one that died with the Wi-Fi
+        Task { [weak self] in
+            while true {
+                try? await Task.sleep(nanoseconds: Self.pingEvery)
+                guard let self, await self.isCurrent(task) else { return }
+                task.sendPing { error in if error != nil { Task { await self.drop(task) } } }
+            }
+        }
+    }
+
+    private func isCurrent(_ task: URLSessionWebSocketTask) -> Bool { task === socket }
+
+    /// The agent sends nothing; a failed receive means the socket closed.
+    private nonisolated func receive(_ task: URLSessionWebSocketTask) {
+        task.receive { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure: Task { await self.drop(task) }
+            case .success: self.receive(task)
+            }
+        }
+    }
+
+    private func drop(_ task: URLSessionWebSocketTask) {
+        task.cancel(with: .goingAway, reason: nil)
+        guard task === socket else { return }
+        socket = nil
+        socketPc = nil
+        socketOpen = false
     }
 }

@@ -74,7 +74,7 @@
       'panel.wake': 'Wake the PC',
       'panel.waking': 'Waking…',
       'panel.wakeFailed': "Didn't wake. It only works on the PC's own network; check the BIOS and adapter settings (PhoneBox guide: Wake-on-LAN).",
-      'panel.offlineHelp': 'Is the PhoneBox agent running? Plug in the USB cable, or pair over Wi-Fi: in the PhoneBox settings on the computer choose Wi-Fi & Tailscale › Pair a phone over Wi-Fi and scan the QR code with this phone\'s camera.',
+      'panel.offlineHelp': 'Is the PhoneBox agent running? Plug in the USB cable, or pair over Wi-Fi: in the PhoneBox settings on the computer choose Wi-Fi & Tailscale › Pair a phone or iPad over Wi-Fi and scan the QR code with this phone\'s camera.',
       'panel.webviewWarn': 'Outdated WebView — update Android System WebView or Google Chrome so widgets scale properly.',
       'panel.switchingPc': 'Switching to {name}…',
       'panel.otherComputer': 'the other computer',
@@ -635,7 +635,8 @@
       's.wifi.title': 'Wi-Fi & Tailscale',
       's.wifi.enable': 'Let the phone connect without the USB cable',
       's.wifi.port': 'Port',
-      's.wifi.pair': 'Pair a phone over Wi-Fi',
+      's.wifi.pair': 'Pair a phone or iPad over Wi-Fi',
+      's.pair.showAndroidApp': 'Pairing an Android phone? Show its app download',
       's.wifi.newKey': 'New key (unpair phones)',
       's.updates.title': 'Updates',
       's.updates.auto': 'Install new releases automatically',
@@ -1026,7 +1027,7 @@
       's.obs.hint': 'In OBS: Tools › WebSocket Server Settings › <i>Enable WebSocket server</i>; copy the password from <i>Show Connect Info</i>.',
       's.battery.leadTail': 'where it comes from: a <b>smart plug in Home Assistant</b> (the phone on its own charger), or two <b>shortcuts</b>, for example <code>uhubctl</code> for a USB hub with switchable ports. Without USB power the panel keeps running over Wi-Fi.',
       's.claude.hint': 'When Claude Code asks for permission (run a command, edit a file…), the phone shows the request with <b>Allow</b> and <b>Deny</b>. If the phone is not connected or nobody answers in time, Claude Code asks in the terminal as usual. This needs a small hook in <code>~/.claude/settings.json</code>; PhoneBox adds it for you (a backup is kept next to the file).',
-      's.wifi.lead': 'Pair a phone by plugging it in once over USB after turning this on (and restarting), or without a cable: <b>Pair a phone over Wi-Fi</b> shows a QR code to scan with the phone\'s camera. The phone then talks HTTPS to this PC, trusts only this PC\'s certificate and has to present a secret key. The phone and this PC must be on the same network &mdash; or both on <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a>, which also works from another place or across separate Wi-Fi networks. Windows Firewall asks once &mdash; allow it (tick the network type Tailscale uses, too).',
+      's.wifi.lead': 'Pair a phone by plugging it in once over USB after turning this on (and restarting), or without a cable: <b>Pair a phone or iPad over Wi-Fi</b> shows a QR code to scan with the phone\'s camera. The phone then talks HTTPS to this PC, trusts only this PC\'s certificate and has to present a secret key. The phone and this PC must be on the same network &mdash; or both on <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a>, which also works from another place or across separate Wi-Fi networks. Windows Firewall asks once &mdash; allow it (tick the network type Tailscale uses, too).',
       's.upd.checksBefore': 'Checks',
       's.upd.checksAfter': 'on GitHub every 6 hours. The phone app is installed over USB without a prompt on the phone; the agent replaces its own files and restarts.',
       's.wh.payloadHint': 'JSON payloads may carry',
@@ -13311,13 +13312,45 @@
   // The iPad app (window.__phoneboxHost.platform) is not an Android phone: its own words for the panel texts that
   // name Android or the phone. English only; other languages keep their (phone) translation.
   const IPAD_EN = {
-    'panel.offlineHelp': 'Is the PhoneBox agent running on the Mac? To pair this iPad: in the PhoneBox settings on the Mac choose Wi-Fi & Tailscale › Pair a phone over Wi-Fi and scan the QR code with the iPad’s camera, or hold three fingers on this screen for the PhoneBox menu.',
+    'panel.offlineHelp': 'Is the PhoneBox agent running on the Mac? To pair this iPad: in the PhoneBox settings on the Mac choose Wi-Fi & Tailscale › Pair a phone or iPad over Wi-Fi and scan the QR code with the iPad’s camera, or hold three fingers on this screen for the PhoneBox menu.',
     'w.dictate.permissionBlocked': 'Turn on Speech Recognition and the microphone in Settings › Apps › PhoneBox',
     'w.dictate.unavailable': 'This iPad has no speech recognizer for this language',
     'w.dictate.offlineUnsupported': 'This iPad can’t recognize this language on the device',
-    'w.console.unavailable': 'The app console isn’t available here.\nUpdate PhoneBox on the Mac, or check this iPad’s pages in Settings › Phones',
+    'w.console.unavailable': 'The app console isn’t available here.\nUpdate PhoneBox on the Mac, or check this iPad’s pages in Settings › iPads',
   };
   const onIpad = () => { try { return window.__phoneboxHost?.platform === 'ipad'; } catch (_) { return false; } };
+
+  // The settings page on the computer names the panel "the phone". When every device the agent has seen is the iPad
+  // app (settings.html calls setPanelKind from /api/phones), its English texts say "iPad" instead, except where a text
+  // is about something only an Android phone does (USB, adb, volume keys …) or compares phone and tablet screens.
+  let panelKind = '';
+  try { panelKind = localStorage.getItem('pb-panel-kind') || ''; } catch (_) {}
+  function setPanelKind(kind) {
+    kind = kind === 'ipad' || kind === 'phone' ? kind : '';
+    if (!kind || kind === panelKind) return false;
+    panelKind = kind;
+    try { localStorage.setItem('pb-panel-kind', kind); } catch (_) {}
+    return true;
+  }
+  const ANDROID_ONLY = /Android|USB|\badb\b|\bADB\b|\broot\b|volume key|proximity|scrcpy|phone mic|VB-CABLE|lock screen|launcher|\bAPK\b|Recents|tablet|iPad/i;
+  const KEEP_PHONE = /^s\.(pages\.screen|phoneMic\.|kiosk\.|conn\.phoneToUse|conn\.installApp|battery\.|wifi\.step1)/;
+  const IPAD_S = {
+    's.pages.lead': 'Each page is a grid of widgets, 12 columns wide (6 rows on a phone, more on a tablet such as the iPad). Pick a page on the left, arrange its widgets on the screen below and set their options. Drag pages to reorder them; the first one is the home page the panel returns to when idle. On the iPad, swipe or tap a dot to go to its page (or slide along the dots to pick one); tap the current dot or the grid button next to the dots, or long-press an empty part of a page, for an overview of all pages.',
+    's.phones.lead': 'Several devices (iPads, phones, tablets) can use this computer at once, over Wi-Fi or USB. Give each one a name and choose the pages it shows; a device shows all pages until you choose.',
+    's.wifi.lead': 'Pair an iPad without a cable: <b>Pair a phone or iPad over Wi-Fi</b> shows a QR code to scan with the iPad’s camera. The iPad then talks HTTPS to this computer, trusts only this computer’s certificate and has to present a secret key. Both must be on the same network &mdash; or both on <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a>, which also works from another place or across separate Wi-Fi networks. An Android phone can also pair by plugging it in once over USB after turning this on (and restarting).',
+    's.wifi.step2': 'Scan this with the iPad’s camera',
+    's.wifi.step2Hint': 'Open the link it shows in PhoneBox, or scan it from the PhoneBox app. The iPad asks you to confirm the code ',
+    's.wifi.noCableHint': 'No cable needed. The iPad and this computer must be on the same network (or both on Tailscale).',
+  };
+  /** English settings text for an iPad panel: "phone" says "iPad" (see panelKind). */
+  function deviceWords(text, key) {
+    if (panelKind !== 'ipad' || active !== 'en' || typeof text !== 'string' || ANDROID_ONLY.test(text)
+      || (key && KEEP_PHONE.test(key))) return text;
+    return text
+      .replace(/\b([Aa]) phone\b/g, (_, a) => (a === 'A' ? 'An' : 'an') + ' iPad')
+      .replace(/\b[Pp]hones\b/g, 'iPads')
+      .replace(/\b[Pp]hone\b/g, 'iPad');
+  }
   /** English panel text with a Mac agent: "PC" and "computer" say "Mac" (but not where a text is about Windows). */
   function macWords(text) {
     if (hostOs !== 'macos' || active !== 'en' || typeof text !== 'string' || /Windows/.test(text)) return text;
@@ -13333,11 +13366,12 @@
       const pc = dict['panel.pcNotConnected'] ?? STRINGS.en['panel.pcNotConnected'];
       if (PC_WORD.test(pc)) s = pc.replace(PC_WORD, 'Mac');
     }
-    // the settings editor on the computer (s.*) keeps its words; these are the panel's
-    if (!key.startsWith('s.')) {
-      if (active === 'en' && IPAD_EN[key] && onIpad()) s = IPAD_EN[key];
-      s = macWords(s);
-    }
+    if (key.startsWith('s.')) {
+      // the settings editor on the computer: its words for the computer and for the panel device
+      if (active === 'en' && panelKind === 'ipad' && IPAD_S[key]) s = IPAD_S[key];
+      else s = deviceWords(s, key);
+    } else if (active === 'en' && IPAD_EN[key] && onIpad()) s = IPAD_EN[key];
+    s = macWords(s);
     if (vars) {
       for (const [k, v] of Object.entries(vars)) {
         const text = v == null ? '' : String(v);
@@ -13353,7 +13387,7 @@
     if (!text) return text;
     const dict = CATALOG[active];
     // own entries only: text such as "constructor" must not pick up Object's inherited members
-    if (!dict || !Object.prototype.hasOwnProperty.call(dict, text)) return text;
+    if (!dict || !Object.prototype.hasOwnProperty.call(dict, text)) return macWords(deviceWords(text));
     return dict[text];
   }
 
@@ -13427,6 +13461,7 @@
     tc,
     tp,
     setHostOs,
+    setPanelKind,
     applyDom,
     populateSelect,
   });

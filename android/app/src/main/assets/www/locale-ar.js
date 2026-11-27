@@ -1020,6 +1020,7 @@ window.PhoneBoxLocaleData = Object.assign(window.PhoneBoxLocaleData || {}, {
       "s.pair.title": "زوج هاتف مع {pc}",
       "s.pair.qr": "رمز الزوج QR",
       "s.pair.downloadQr": "رمز QR لتنزيل التطبيق",
+      "s.pair.showAndroidApp": "هل تقرن هاتف Android؟ اعرض تنزيل التطبيق",
       "s.pair.hosts": "الهاتف سوف يتصل بـ {hosts} على الميناء {port} . و يعمل الرمز مرة واحدة ، لمدة 5 دقائق . و لا يحتوي الرمز QR المفتاح",
       "s.pair.noHosts": "لم يتم العثور على عنوان LAN أو Tailscale في هذا الحاسوب، لذا ليس للهاتف أي شيء يرتبط به.",
       "s.pair.copy": "نسخ رابط الإتصال",

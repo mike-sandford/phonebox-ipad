@@ -141,6 +141,8 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
             hostStateTimer = nil
             stream.stop()
             standby.setRunning(false)
+            let sender = trackpad
+            Task { await sender.close() }
             dictation.cancel(id: 0) // the microphone never stays open behind another app
             callPanel("window.onAppPause && window.onAppPause(true)")
         }
@@ -282,7 +284,7 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
     private func setUpPairingBanner() {
         var config = UIButton.Configuration.filled()
         config.title = "Not paired: scan the pairing QR code"
-        config.subtitle = "On the Mac: PhoneBox settings › Wi-Fi & Tailscale › Pair a phone over Wi-Fi"
+        config.subtitle = "On the Mac: PhoneBox settings › Wi-Fi & Tailscale › Pair a phone or iPad over Wi-Fi"
         config.cornerStyle = .large
         config.contentInsets = NSDirectionalEdgeInsets(top: 14, leading: 20, bottom: 14, trailing: 20)
         pairingBanner.configuration = config

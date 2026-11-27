@@ -1020,6 +1020,7 @@ window.PhoneBoxLocaleData = Object.assign(window.PhoneBoxLocaleData || {}, {
       "s.pair.title": "Pair telepon dengan {pc}",
       "s.pair.qr": "Menyatukan kode QR",
       "s.pair.downloadQr": "QR kode untuk mengunduh aplikasi",
+      "s.pair.showAndroidApp": "Memasangkan ponsel Android? Tampilkan unduhan aplikasi",
       "s.pair.hosts": "Telepon akan terhubung ke {hosts} pada port {port} . Kode ini bekerja sekali, selama 5 menit. Kode QR tidak berisi kuncinya.",
       "s.pair.noHosts": "Tidak ada alamat LAN atau Tailscale ditemukan pada komputer ini, jadi telepon tidak memiliki apa-apa untuk terhubung.",
       "s.pair.copy": "Salin tautan pasangan",

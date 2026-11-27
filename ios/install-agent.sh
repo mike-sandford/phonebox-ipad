@@ -40,6 +40,10 @@ launchctl kickstart -k "$label" 2>/dev/null || true
 sleep 3
 if lsof -nP -iTCP:8765 -sTCP:LISTEN >/dev/null 2>&1; then
   echo "Done: the agent from this repo is running (http://127.0.0.1:8765)."
+  echo
+  echo "This build has a new signature, so macOS no longer trusts it for the trackpad and for typing (Dictation):"
+  echo "in System Settings › Privacy & Security › Accessibility remove PhoneBoxAgent with –, add it again with +"
+  echo "(⌘⇧G, paste: $app/PhoneBoxAgent), then run: launchctl kickstart -k $label"
 else
   echo "The agent did not start. If System Settings › General › Login Items & Extensions lists PhoneBoxAgent under"
   echo "\"Allow in the Background\", turn it on, then run: launchctl kickstart -k $label"

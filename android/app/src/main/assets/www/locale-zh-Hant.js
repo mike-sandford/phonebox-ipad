@@ -1020,6 +1020,7 @@ window.PhoneBoxLocaleData = Object.assign(window.PhoneBoxLocaleData || {}, {
       "s.pair.title": "將手機與 {pc}",
       "s.pair.qr": "配對 QR 代碼",
       "s.pair.downloadQr": "QR 應用程式下載的代碼",
+      "s.pair.showAndroidApp": "要配對 Android 手機？顯示 App 下載",
       "s.pair.hosts": "電話將連接到 {hosts} 在端口 {port} 。 代碼工作一次, 5分鐘. QR 代碼不包含密鑰.",
       "s.pair.noHosts": "沒有在電腦上找到 LAN 或 Tailscale 地址，所以手機無法連接。",
       "s.pair.copy": "複製配對連結",

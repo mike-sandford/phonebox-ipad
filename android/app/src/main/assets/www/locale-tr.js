@@ -426,6 +426,7 @@ window.PhoneBoxLocaleData = Object.assign(window.PhoneBoxLocaleData || {}, {
       "s.pair.title": "Telefonu {pc} ile eşle",
       "s.pair.qr": "QR kodu eşleştiriliyor",
       "s.pair.downloadQr": "Uygulama indirme için QR kodu",
+      "s.pair.showAndroidApp": "Android telefon mu eşleştiriyorsunuz? Uygulama indirmesini göster",
       "s.pair.hosts": "Telefon {hosts}'ye {port} portu üzerinden bağlanacak. Kod bir kez çalışır, 5 dakika için. QR kodunda anahtar bulunmuyor.",
       "s.pair.noHosts": "Bu bilgisayarda LAN veya Tailscale adresi bulunmadı, bu yüzden telefonun bağlanacak bir şeyi yok.",
       "s.pair.copy": "Çiftleştirme bağlantısını kopyala",
