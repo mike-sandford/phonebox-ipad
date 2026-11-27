@@ -956,7 +956,7 @@ nav a.on::before { color: var(--accent); }
         <h3 data-i18n="s.wifi.title">Wi-Fi &amp; Tailscale</h3>
         <div class="row" style="margin-bottom:8px"><label class="switch"><input type="checkbox" data-bind="lan.enabled"><span></span></label> <span data-i18n="s.wifi.enable">Let the phone connect without the USB cable</span></div>
         <p class="hint" style="margin:0 0 12px" data-i18n-html="s.wifi.lead">Pair a phone by plugging it in once over USB after turning this on (and restarting), or without a cable:
-          <b>Pair a phone over Wi-Fi</b> shows a QR code to scan with the phone's camera.
+          <b>Pair a phone or iPad over Wi-Fi</b> shows a QR code to scan with the phone's camera.
           The phone then talks HTTPS to this PC, trusts only this PC's certificate and has to present a secret key.
           The phone and this PC must be on the same network &mdash; or both on <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a>, which also works from another place or across separate Wi-Fi networks.
           Windows Firewall asks once &mdash; allow it (tick the network type Tailscale uses, too).</p>
@@ -964,7 +964,7 @@ nav a.on::before { color: var(--accent); }
           <div class="field"><label data-i18n="s.wifi.port">Port</label><input type="number" min="1024" max="65535" data-bind="lan.port" data-type="int"></div>
           <div class="field"><label data-i18n="s.wifi.addresses">Addresses offered to the phone</label><div id="lanHosts" class="hint">—</div></div>
         </div>
-        <div class="row"><button class="btn primary" id="lanPair" data-i18n="s.wifi.pair">Pair a phone over Wi-Fi</button><button class="btn" id="lanRegen" data-i18n="s.wifi.newKey">New key (unpair phones)</button><span class="hint" id="lanStatus"></span></div>
+        <div class="row"><button class="btn primary" id="lanPair" data-i18n="s.wifi.pair">Pair a phone or iPad over Wi-Fi</button><button class="btn" id="lanRegen" data-i18n="s.wifi.newKey">New key (unpair phones)</button><span class="hint" id="lanStatus"></span></div>
       </div>
       <div class="card">
         <h3 data-i18n="s.updates.title">Updates</h3>
@@ -2375,15 +2375,19 @@ async function pairOverWifi() {
     h('b', {}, t('s.wifi.step2')),
     h('img', { src: svg(r.qr), alt: t('s.pair.qr') }),
     h('small', { class: 'hint' }, t('s.wifi.step2Hint'), h('b', {}, r.check), '. ', left));
+  const appBox = h('div', { class: 'pair-qr' },
+    h('b', {}, t('s.wifi.step1')),
+    h('img', { src: svg(r.appQr), alt: t('s.pair.downloadQr') }),
+    h('small', { class: 'hint' }, t('s.wifi.step1Hint')));
+  // an iPad gets its app from Xcode, not from this QR code: with only iPads seen, the Android download waits behind a button
+  const ipadPanel = (() => { try { return localStorage.getItem('pb-panel-kind') === 'ipad'; } catch (_) { return false; } })();
+  appBox.hidden = ipadPanel;
+  const showApp = ipadPanel ? h('button', { class: 'btn sm', onclick: (e) => { appBox.hidden = false; e.target.remove(); } }, t('s.pair.showAndroidApp')) : null;
   $('modalBody').replaceChildren(
     h('h3', {}, t('s.pair.title', { pc: r.pc })),
     h('p', { class: 'hint', style: 'margin:0' }, t('s.wifi.noCableHint')),
-    h('div', { class: 'pair-qrs' },
-      h('div', { class: 'pair-qr' },
-        h('b', {}, t('s.wifi.step1')),
-        h('img', { src: svg(r.appQr), alt: t('s.pair.downloadQr') }),
-        h('small', { class: 'hint' }, t('s.wifi.step1Hint'))),
-      pairBox),
+    h('div', { class: 'pair-qrs' }, appBox, pairBox),
+    showApp,
     h('p', { class: 'hint', style: 'margin:0' }, r.hosts.length
       ? t('s.pair.hosts', { hosts: r.hosts.join(', '), port: r.port })
       : t('s.pair.noHosts')),
@@ -2410,6 +2414,12 @@ async function pairOverWifi() {
 let phonesSeen = [];
 async function loadPhones(renderList = true) {
   try { phonesSeen = await (await fetch('/api/phones')).json(); } catch (_) { return; }
+  // the panel's own word ("iPad" or "phone") for the English texts: only iPads seen so far means an iPad panel
+  const models = phonesSeen.map((p) => p.model).filter(Boolean);
+  if (models.length && window.PhoneBoxI18n?.setPanelKind?.(models.every((m) => /^Apple iPad/.test(m)) ? 'ipad' : 'phone')) {
+    relocalize();
+    loadInfo();
+  }
   previewPhones = phonesSeen.filter(p => p.viewport && Date.now() - p.lastSeen < 45_000);
   if (!previewPhones.some(p => p.id === previewDeviceId)) previewDeviceId = '';
   if (!previewPhones.some(p => p.id === automaticPreviewDeviceId))
@@ -3873,9 +3883,19 @@ function bindLanguage() {
   const onPick = (val) => {
     cfg.display ??= {};
     cfg.display.language = val || 'auto';
-    applyLanguageUi(cfg.display.language);
-    // every section holds localized strings: rebuild them all, not only the pages editor
-    renderAppearanceSettings();
+    relocalize();
+    changed();
+  };
+  if ($('langSel')) $('langSel').onchange = (e) => onPick(e.target.value);
+  if ($('displayLangSel')) $('displayLangSel').onchange = (e) => onPick(e.target.value);
+}
+
+/** Every section holds localized strings: after a change of language (or of the words for the Mac or the iPad,
+ *  which the English texts follow) rebuild them all, not only the pages editor. */
+function relocalize() {
+  if (!cfg) return;
+  applyLanguageUi(cfg.display?.language || 'auto');
+  renderAppearanceSettings();
     renderControlSettings();
     renderPages();
     renderDeck();
@@ -3884,12 +3904,9 @@ function bindLanguage() {
     renderFeeds();
     renderCameras();
     renderConsole();
-    renderCharge();
-    if (typeof queuePreview === 'function') queuePreview();
-    changed();
-  };
-  if ($('langSel')) $('langSel').onchange = (e) => onPick(e.target.value);
-  if ($('displayLangSel')) $('displayLangSel').onchange = (e) => onPick(e.target.value);
+  renderCharge();
+  renderPhones();
+  if (typeof queuePreview === 'function') queuePreview();
 }
 
 function bindForm() {
@@ -3983,6 +4000,7 @@ async function loadInfo() {
     pill.className = 'pill' + (i.connected ? ' on' : '');
     pill.querySelector('span').textContent = i.connected ? t('s.conn.connected') + (i.via ? ' · ' + i.via : '') : t('s.conn.notConnected');
     osName = i.os || 'windows';
+    if (window.PhoneBoxI18n?.setHostOs?.(osName)) relocalize();
     $('lhmHelp').hidden = osName !== 'windows';
     const lhm = i.sensors?.lhm;
     const lhmStatus = $('lhmStatus');

@@ -15,7 +15,7 @@ Target: iPad (7th generation) on iPadOS 18. Deployment target iPadOS 17, iPad on
 4. Open `ios/PhoneBox.xcodeproj`, connect the iPad by cable (Trust, and Settings › Privacy & Security › Developer Mode
    on), pick it as the run destination and press Run. The first launch asks for **Local Network** access: allow it.
 5. On the Mac, in the PhoneBox settings: General › Wi-Fi & Tailscale › "Let the phone connect without the USB cable",
-   then Wi-Fi › "Pair a phone over Wi-Fi". On the iPad tap "Scan the pairing QR code" (or scan it with the Camera app
+   then Wi-Fi › "Pair a phone or iPad over Wi-Fi". On the iPad tap "Scan the pairing QR code" (or scan it with the Camera app
    and choose "Open in PhoneBox"), compare the check code, and tap Pair.
 
 Run `ios/setup.sh` again after pulling changes that add or remove files under `ios/PhoneBox`. The panel itself (`www`) is copied
@@ -61,12 +61,14 @@ Next:
 
 Things the agent shows or does that assume an Android phone (to address later, all agent changes):
 
-* Settings › Wi-Fi › Pair a phone over Wi-Fi shows an "install the app" QR code (an APK link) beside the pairing QR
-  code. It is now labelled "Android"; an iPad skips it and scans the second one.
+* Settings › Wi-Fi › Pair a phone or iPad over Wi-Fi: once the agent has seen only iPads, the "install the app" QR code
+  (an APK link) waits behind a "Pairing an Android phone?" button, and the dialog says "iPad".
 * The agent offers APK updates for the phone app; the iPad avoids them by sending `X-PhoneBox-App: ipad-<version>`.
 * Settings › General "install the phone app" and the USB / adb steps in `setup.sh` (use `--no-phone`).
-* The settings on the Mac still speak of "the phone" in most places (they are shared with the Android app). The Standby
-  hint and the pairing dialog mention the iPad. On the iPad itself, in English, the panel says "Mac" for "PC" and
-  "computer" when the agent runs on a Mac, and its Android-only hints (dictation, offline help) are worded for the iPad.
+* The settings on the Mac follow the device: once the agent has seen only the iPad app (Settings › Phones), its English
+  texts say "iPad" for "phone" and "Mac" for "PC" / "computer", except where a text is about an Android-only feature
+  (USB, adb, volume keys, kiosk, phone mic) or the phone and tablet screen sizes. Other languages keep their wording.
+  On the iPad itself, in English, the panel says "Mac" for "PC" and "computer" when the agent runs on a Mac, and its
+  Android-only hints (dictation, offline help) are worded for the iPad.
 * "More rows on a tablet" (12 × 10 on the iPad) is not in release 0.9.29 yet; it needs the agent from source or the
   next release.

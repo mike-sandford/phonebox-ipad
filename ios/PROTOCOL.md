@@ -10,7 +10,7 @@ sends the key.
 
 ## 1. Pairing (QR code, no USB)
 
-The agent's settings page (Settings › Wi-Fi › "Pair a phone over Wi-Fi", local only: `POST /api/pair/start`) shows a QR
+The agent's settings page (Settings › Wi-Fi › "Pair a phone or iPad over Wi-Fi", local only: `POST /api/pair/start`) shows a QR
 code holding:
 
 ```

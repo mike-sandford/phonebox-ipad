@@ -1020,6 +1020,7 @@ window.PhoneBoxLocaleData = Object.assign(window.PhoneBoxLocaleData || {}, {
       "s.pair.title": "Спарування телефону з {pc}",
       "s.pair.qr": "Спарювання коду QR",
       "s.pair.downloadQr": "Код QR для завантаження програми",
+      "s.pair.showAndroidApp": "Підключаєте телефон Android? Показати завантаження застосунку",
       "s.pair.hosts": "Телефон з’ єднається з {hosts} на порту {port} . Код працює один раз, протягом 5 хвилин. У коді QR не міститься ключа.",
       "s.pair.noHosts": "На цьому комп’ ютері не знайдено адрес LAN або Tailscale, отже телефону немає з чим з' єднатися.",
       "s.pair.copy": "Скопіювати посилання на парування",
