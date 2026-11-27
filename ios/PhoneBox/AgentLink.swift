@@ -167,6 +167,19 @@ final class AgentLink: @unchecked Sendable {
         return nil
     }
 
+    /// A WebSocket to /api/trackpad on the active computer (its preferred address), with the pinned certificate and the
+    /// paired key, as Android's TrackpadSocket. Not resumed yet.
+    func trackpadSocket() -> (task: URLSessionWebSocketTask, pc: String)? {
+        guard let pc = store.active, let i = hostOrder(pc).first,
+              var req = makeRequest(pc, host: pc.hosts[i], method: "GET", pathAndQuery: "/api/trackpad", timeout: 60),
+              let url = URL(string: "wss://\(pc.hosts[i]):\(pc.port)/api/trackpad") else { return nil }
+        req.url = url
+        return (session(for: pc.id).webSocketTask(with: req), pc.id)
+    }
+
+    /// The id of the active computer, if one is paired.
+    var activeId: String? { store.active?.id }
+
     // MARK: - pairing
 
     /// Why a pairing failed (AgentLink.PairFailure on Android).

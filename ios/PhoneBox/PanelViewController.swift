@@ -141,6 +141,8 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
             hostStateTimer = nil
             stream.stop()
             standby.setRunning(false)
+            let sender = trackpad
+            Task { await sender.close() }
             dictation.cancel(id: 0) // the microphone never stays open behind another app
             callPanel("window.onAppPause && window.onAppPause(true)")
         }

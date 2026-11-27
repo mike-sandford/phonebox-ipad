@@ -7,7 +7,8 @@
   with the pairing QR code, the agent's certificate pinned. Standby and Dictation work as on Android; see
   `ios/README.md` for what an iPad cannot do. The Wi-Fi pairing dialog now marks the app download QR code as Android.
   When the agent has seen only the iPad app, the settings say "iPad" (and "Mac" on a Mac) in English, and the
-  pairing dialog keeps the Android app download behind a button.
+  pairing dialog keeps the Android app download behind a button. The trackpad widget on the iPad sends over a WebSocket, as on
+  Android, instead of one request per move.
 
 **Widgets**
 - Discord on Windows: **Choose on PC** (screen share) brings Discord's window to the front. Discord draws its picker

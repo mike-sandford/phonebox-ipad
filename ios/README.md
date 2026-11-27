@@ -46,14 +46,13 @@ Done (built and running on an iPad 7th generation):
 * Pairing by QR code (in-app scanner or `phonebox://pair` link), stored in the Keychain; several computers.
 * Live stream (`/api/stream`) to `window.onAgentStream`, `onAppPause` when the app is hidden.
 * Bridge: battery, is24Hour, pcs / selectPc / forgetPc, setBrightness, setOrientation, transport, version, sensors
-  (none), trackpad (HTTP), setLanguage.
+  (none), trackpad (WebSocket to the agent, HTTP while it opens), setLanguage.
 * Full screen, no status bar, home indicator hidden, screen kept on.
 * Standby, Dictation, app icon (the Android icon).
 * iPad page templates (12 × 10) in the agent's New page dialog.
 
-Next:
+Left out:
 
-* Trackpad over WebSocket (it works over HTTP now).
 * Not possible on iPad without special entitlements: Wake-on-LAN (UDP broadcast), volume keys, vibration, room-light
   and proximity sensors, home-screen replacement. The panel hides those features when the bridge lacks them.
 
