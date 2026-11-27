@@ -436,6 +436,15 @@ public class ConfigTests
         Assert.Equal(expected, display.GetProperty("standby").GetString());
         Assert.Equal("power", c.Display.Standby); // the saved value is unchanged
     }
+
+    [Theory]
+    [InlineData("""{"display":{"standby":"data"}}""", "data")]
+    [InlineData("""{"deviceSerial":"FAKE1","ignoredDeviceSerials":["FAKE1"],"display":{"standby":"power"}}""", "power")]
+    public void StandbyReachesTheIpadAppWithoutAUsbPhone(string json, string expected)
+    {
+        var display = JsonSerializer.SerializeToElement(Load(json).ToPublic(standbyOwnScreen: true), ConfigStore.WriteOpts).GetProperty("display");
+        Assert.Equal(expected, display.GetProperty("standby").GetString());
+    }
 }
 
 public class LanTests

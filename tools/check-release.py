@@ -17,6 +17,10 @@ for t in templates:
  for w in t['widgets']:
   assert w['type'] in types,(t['id'],w['type'])
   assert 0<=w.get('x',0) and 0<=w.get('y',0) and w['x']+w['w']<=12 and w['y']+w['h']<=6,(t['id'],w)
+ # optional 12 x 10 layout for a 4:3 tablet (the editor's Tablet screen with More rows on a tablet)
+ for w in t.get('tablet',[]):
+  assert w['type'] in types,(t['id'],'tablet',w['type'])
+  assert 0<=w.get('x',0) and 0<=w.get('y',0) and w['x']+w['w']<=12 and w['y']+w['h']<=10,(t['id'],'tablet',w)
 readme=(root/'README.md').read_text(encoding='utf-8')
 import importlib.util,sys
 sys.dont_write_bytecode=True

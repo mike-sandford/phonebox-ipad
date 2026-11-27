@@ -82,12 +82,13 @@ public sealed class AgentConfig
     /// with it in the URL, so a new upload is fetched and an unchanged one comes from the cache. Sent as text: a 64-bit
     /// value loses its last digits as a JavaScript number, and two pictures could then share a cached URL.</param>
     public object ToPublic(string? deviceId = null, Func<Shortcut, (long? Rev, bool Upload)>? shortcutIcon = null,
-        long? wallpaperRev = null, bool standbyForPhone = false) => new
+        long? wallpaperRev = null, bool standbyForPhone = false, bool standbyOwnScreen = false) => new
     {
         weather = Weather,
         codexBar = CodexBar,
         night = Night,
-        display = Display.ForPhone(standbyForPhone && DeviceSerial is { Length: > 0 } serial && UsesUsbDevice(serial)),
+        // standbyOwnScreen: the iPad app runs standby itself (it only darkens its own screen), with no adb behind it
+        display = Display.ForPhone(standbyOwnScreen || (standbyForPhone && DeviceSerial is { Length: > 0 } serial && UsesUsbDevice(serial))),
         // this device's own home page (Settings › Phones), when it has one among the pages it shows
         homePage = HomePageFor(deviceId),
         wallpaperRev = wallpaperRev?.ToString(System.Globalization.CultureInfo.InvariantCulture),

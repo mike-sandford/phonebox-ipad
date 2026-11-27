@@ -863,7 +863,7 @@ window.PhoneBoxLocaleData = Object.assign(window.PhoneBoxLocaleData || {}, {
       "s.js.pushHint": "Posílat data pomocí POST /api/push/ <key> — viz sekce Webhooky.",
       "s.js.blankPage": "Prázdná stránka",
       "s.js.blankPageHint": "Začněte z prázdné mřížky.",
-      "s.wifi.step1": "1. nainstalujte aplikaci (přeskočit, pokud je nainstalován)",
+      "s.wifi.step1": "1. Android · nainstalujte aplikaci (přeskočit, pokud je nainstalován)",
       "s.wifi.step1Hint": "Stahuje se z webu PhoneBox 10.2.3.1.4. Android jednou požádá o povolení instalace aplikací z prohlížeče.",
       "s.wifi.step2": "2. Naskenujte jej fotoaparátem telefonu",
       "s.wifi.step2Hint": "Otevřete odkaz, který se zobrazí a zvolte PhoneBox . Telefon vás požádá o potvrzení kódu . ",

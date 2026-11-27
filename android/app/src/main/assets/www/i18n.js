@@ -543,7 +543,7 @@
       's.display.standby.off': 'Off: hold the screen while the panel runs',
       's.display.standby.power': 'Sleep when USB charge is cut',
       's.display.standby.data': 'Sleep when the agent stops answering',
-      's.display.standbyHint': 'When the computer comes back, PhoneBox wakes the phone and opens the panel. A swipe-only lock screen is dismissed automatically. If the phone is protected by a PIN or pattern, you must still unlock it yourself. While standby is on, PhoneBox turns off Android\'s stay-awake-while-charging setting and restores it when standby is turned off. Standby only acts on the phone named under Phone connection › Phone to use; with no phone chosen it does nothing.',
+      's.display.standbyHint': 'When the computer comes back, PhoneBox wakes the phone and opens the panel. A swipe-only lock screen is dismissed automatically. If the phone is protected by a PIN or pattern, you must still unlock it yourself. While standby is on, PhoneBox turns off Android\'s stay-awake-while-charging setting and restores it when standby is turned off. Standby only acts on the phone named under Phone connection › Phone to use; with no phone chosen it does nothing. The iPad app does standby by itself: it darkens its own screen and lights it again when the computer is back.',
       's.display.standbyGrace': 'Standby grace (s)',
       's.display.standbyGraceHint': 'Absorbs a reboot or a network hiccup.',
       's.rules.countdown': 'Page switches count down on the phone and wait while you use it (General › Page switching).',
@@ -922,9 +922,9 @@
       's.js.pushHint': 'Send data with POST /api/push/<key> — see the Webhooks section.',
       's.js.blankPage': 'Blank page',
       's.js.blankPageHint': 'Start from an empty grid.',
-      's.wifi.step1': '1. Install the app (skip if it is installed)',
+      's.wifi.step1': '1. Android · Install the app (skip if it is installed)',
       's.wifi.step1Hint': 'Downloads the PhoneBox app. Android asks once to allow installing apps from the browser.',
-      's.wifi.step2': '2. Scan this with the phone’s camera',
+      's.wifi.step2': '2. Scan this with the phone’s or iPad’s camera',
       's.wifi.step2Hint': 'Open the link it shows and choose PhoneBox. The phone asks you to confirm the code ',
       's.wifi.noCableHint': 'No USB cable, developer options or adb needed. The phone and this computer must be on the same network (or both on Tailscale).',
       's.wh.nothingPushed': 'Nothing pushed yet.',
@@ -5374,7 +5374,7 @@
       's.js.pushHint': 'Envie dados com POST /api/push/<key> — veja a seção Webhooks.',
       's.js.blankPage': 'Página em branco',
       's.js.blankPageHint': 'Comece com uma grade vazia.',
-      's.wifi.step1': '1. Instale o aplicativo (pule se já estiver instalado)',
+      's.wifi.step1': '1. Android · Instale o aplicativo (pule se já estiver instalado)',
       's.wifi.step1Hint': 'Baixa o aplicativo PhoneBox. O Android pergunta uma vez se pode instalar aplicativos a partir do navegador.',
       's.wifi.step2': '2. Escaneie isto com a câmera do telefone',
       's.wifi.step2Hint': 'Abra o link mostrado e escolha PhoneBox. O telefone pede para confirmar o código ',
@@ -8155,7 +8155,7 @@
       's.js.pushHint': 'Στείλε δεδομένα με POST /api/push/<key> — δες την ενότητα Webhooks.',
       's.js.blankPage': 'Κενή σελίδα',
       's.js.blankPageHint': 'Ξεκίνα από ένα άδειο πλέγμα.',
-      's.wifi.step1': '1. Εγκατάστησε την εφαρμογή (παράλειψε αν είναι ήδη εγκατεστημένη)',
+      's.wifi.step1': '1. Android · Εγκατάστησε την εφαρμογή (παράλειψε αν είναι ήδη εγκατεστημένη)',
       's.wifi.step1Hint': 'Κατεβάζει την εφαρμογή PhoneBox. Το Android θα σου ζητήσει μία φορά να επιτρέψεις την εγκατάσταση εφαρμογών από το πρόγραμμα περιήγησης.',
       's.wifi.step2': '2. Σάρωσε αυτόν τον κωδικό με την κάμερα του τηλεφώνου',
       's.wifi.step2Hint': 'Άνοιξε τον σύνδεσμο που εμφανίζεται και διάλεξε PhoneBox. Το τηλέφωνο θα σου ζητήσει να επιβεβαιώσεις τον κωδικό ',
@@ -9214,7 +9214,7 @@
       's.js.pushHint': 'Gửi dữ liệu bằng POST /api/push/<key> — xem mục Webhook.',
       's.js.blankPage': 'Trang trống',
       's.js.blankPageHint': 'Bắt đầu từ lưới trống.',
-      's.wifi.step1': '1. Cài ứng dụng (bỏ qua nếu đã cài)',
+      's.wifi.step1': '1. Android · Cài ứng dụng (bỏ qua nếu đã cài)',
       's.wifi.step1Hint': 'Tải ứng dụng PhoneBox. Android sẽ hỏi một lần để cho phép cài ứng dụng từ trình duyệt.',
       's.wifi.step2': '2. Quét mã này bằng camera điện thoại',
       's.wifi.step2Hint': 'Mở liên kết hiện ra và chọn PhoneBox. Điện thoại sẽ hỏi bạn xác nhận mã ',
@@ -13295,11 +13295,49 @@
   function getPref() { return pref; }
   function getLocale() { return BY_CODE.get(active).locale; }
 
+  // The computer's system, as the agent last reported it (state.os): with a Mac, "PC not connected" says "Mac" instead,
+  // in the languages whose text names it "PC" (others keep their own word for the computer).
+  let hostOs = '';
+  try { hostOs = localStorage.getItem('pb-host-os') || ''; } catch (_) {}
+  function setHostOs(os) {
+    os = typeof os === 'string' ? os : '';
+    if (!os || os === hostOs) return false;
+    hostOs = os;
+    try { localStorage.setItem('pb-host-os', os); } catch (_) {}
+    return true;
+  }
+  const NOT_CONNECTED = new Set(['panel.pcNotConnected', 'panel.computerNotConnected']);
+  const PC_WORD = /\bPC\b|ПК/;
+  // The iPad app (window.__phoneboxHost.platform) is not an Android phone: its own words for the panel texts that
+  // name Android or the phone. English only; other languages keep their (phone) translation.
+  const IPAD_EN = {
+    'panel.offlineHelp': 'Is the PhoneBox agent running on the Mac? To pair this iPad: in the PhoneBox settings on the Mac choose Wi-Fi & Tailscale › Pair a phone over Wi-Fi and scan the QR code with the iPad’s camera, or hold three fingers on this screen for the PhoneBox menu.',
+    'w.dictate.permissionBlocked': 'Turn on Speech Recognition and the microphone in Settings › Apps › PhoneBox',
+    'w.dictate.unavailable': 'This iPad has no speech recognizer for this language',
+    'w.dictate.offlineUnsupported': 'This iPad can’t recognize this language on the device',
+    'w.console.unavailable': 'The app console isn’t available here.\nUpdate PhoneBox on the Mac, or check this iPad’s pages in Settings › Phones',
+  };
+  const onIpad = () => { try { return window.__phoneboxHost?.platform === 'ipad'; } catch (_) { return false; } };
+  /** English panel text with a Mac agent: "PC" and "computer" say "Mac" (but not where a text is about Windows). */
+  function macWords(text) {
+    if (hostOs !== 'macos' || active !== 'en' || typeof text !== 'string' || /Windows/.test(text)) return text;
+    return text.replace(/\bPC\b/g, 'Mac').replace(/\b[Cc]omputer\b/g, 'Mac');
+  }
+
   function t(key, vars) {
     const dict = STRINGS[active] || STRINGS.en;
     let s = dict[key];
     if (s === undefined) s = STRINGS.en[key];
     if (s === undefined) return key;
+    if (hostOs === 'macos' && NOT_CONNECTED.has(key)) {
+      const pc = dict['panel.pcNotConnected'] ?? STRINGS.en['panel.pcNotConnected'];
+      if (PC_WORD.test(pc)) s = pc.replace(PC_WORD, 'Mac');
+    }
+    // the settings editor on the computer (s.*) keeps its words; these are the panel's
+    if (!key.startsWith('s.')) {
+      if (active === 'en' && IPAD_EN[key] && onIpad()) s = IPAD_EN[key];
+      s = macWords(s);
+    }
     if (vars) {
       for (const [k, v] of Object.entries(vars)) {
         const text = v == null ? '' : String(v);
@@ -13324,7 +13362,7 @@
     if (!text) return text;
     const dict = PANEL[active];
     // own entries only: text such as "constructor" must not pick up Object's inherited members
-    if (!dict || !Object.prototype.hasOwnProperty.call(dict, text)) return text;
+    if (!dict || !Object.prototype.hasOwnProperty.call(dict, text)) return macWords(text);
     return dict[text];
   }
 
@@ -13388,6 +13426,7 @@
     t,
     tc,
     tp,
+    setHostOs,
     applyDom,
     populateSelect,
   });

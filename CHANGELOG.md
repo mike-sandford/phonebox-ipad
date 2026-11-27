@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+**iPad**
+- A native iPad app (`ios/`), the iPad counterpart of the Android app: the same panel full screen, paired over Wi-Fi
+  with the pairing QR code, the agent's certificate pinned. Standby and Dictation work as on Android; see
+  `ios/README.md` for what an iPad cannot do. The Wi-Fi pairing dialog now marks the app download QR code as Android.
+
 **Widgets**
 - Discord on Windows: **Choose on PC** (screen share) brings Discord's window to the front. Discord draws its picker
   inside its own window, so with Discord minimized, behind other windows or in the tray the button seemed to do
@@ -103,6 +108,9 @@
   [freefakesmile](https://github.com/freefakesmile)).
 
 **Panel**
+- Page templates for a 4:3 tablet such as an iPad: Home, Sessions, System, Music, Dashboard and Planner have a 12 × 10
+  layout as well. The layout editor offers it on the **Tablet** screen with Settings › Display › **More rows on a
+  tablet** on, so a new page fills the whole tablet instead of its top 6 rows; elsewhere the 12 × 6 layout stays.
 - Page bar: with many pages on a narrow phone, only the current page keeps its name, so the others are not cut to one
   letter. It happens only when a name would be cut, so tablets, monitors and the side bar keep every name (#553,
   [avery02072003-cmyk](https://github.com/avery02072003-cmyk)).

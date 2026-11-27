@@ -1,0 +1,4 @@
+// Copy to Signing.xcconfig (setup.sh does it) and fill in. Signing.xcconfig is ignored by git.
+// Team ID: Xcode > Settings > Accounts > your team, or developer.apple.com > Membership.
+DEVELOPMENT_TEAM = ABCDE12345
+PRODUCT_BUNDLE_IDENTIFIER = com.example.phonebox

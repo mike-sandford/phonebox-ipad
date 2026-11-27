@@ -1,0 +1,5 @@
+PhoneBox.xcodeproj/
+Signing.xcconfig
+build/
+DerivedData/
+xcuserdata/
