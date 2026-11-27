@@ -26,7 +26,7 @@ final class QRScannerViewController: UIViewController, AVCaptureMetadataOutputOb
         close.translatesAutoresizingMaskIntoConstraints = false
         close.addAction(UIAction { [weak self] _ in self?.dismiss(animated: true) }, for: .primaryActionTriggered)
         let hint = UILabel()
-        hint.text = "Point the camera at the QR code in the PhoneBox settings on the computer"
+        hint.text = "Point the camera at the QR code in the PhoneBox settings on the Mac"
         hint.textColor = .white
         hint.textAlignment = .center
         hint.numberOfLines = 0

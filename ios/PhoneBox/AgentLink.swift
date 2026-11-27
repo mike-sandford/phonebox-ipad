@@ -15,7 +15,7 @@ final class AgentLink: @unchecked Sendable {
 
         static let offline = Reply(status: 503, contentType: "application/json", body: Data(#"{"error":"offline"}"#.utf8))
         static let unknownResult = Reply(status: 504, contentType: "application/json",
-            body: Data(#"{"ok":false,"error":"The command result is unknown; check the computer before retrying"}"#.utf8))
+            body: Data(#"{"ok":false,"error":"The command result is unknown; check the Mac before retrying"}"#.utf8))
         static let unexpected = Reply(status: 502, contentType: "application/json", body: Data(#"{"error":"unexpected response"}"#.utf8))
     }
 
@@ -181,11 +181,11 @@ final class AgentLink: @unchecked Sendable {
             case let .unreachable(pc, hosts):
                 return "\(pc) did not answer at \(hosts.joined(separator: ", ")). Is the iPad on the same network, and is Wi-Fi turned on in the PhoneBox settings? A firewall may also be blocking PhoneBox."
             case let .codeRejected(pc):
-                return "\(pc) refused the pairing code. A code works once, for five minutes: show a new QR code on the computer and scan it again."
+                return "\(pc) refused the pairing code. A code works once, for five minutes: show a new QR code on the Mac and scan it again."
             case let .badAnswer(pc, status):
                 return "\(pc) gave an unexpected answer (HTTP \(status)). Update the PhoneBox agent and try again."
             case .wrongCertificate:
-                return "The computer that answered is not the one in the QR code (its certificate is different). Nothing was sent to it."
+                return "The Mac that answered is not the one in the QR code (its certificate is different). Nothing was sent to it."
             }
         }
     }
@@ -321,6 +321,6 @@ struct PairLink {
         guard !hosts.isEmpty else { return nil }
         let name = String((q["pc"] ?? "").unicodeScalars.filter { $0.value >= 0x20 }.map(Character.init).prefix(64))
             .trimmingCharacters(in: .whitespaces)
-        return PairLink(pc: name.isEmpty ? "your computer" : name, fingerprint: fp, port: port, hosts: Array(hosts), code: code)
+        return PairLink(pc: name.isEmpty ? "your Mac" : name, fingerprint: fp, port: port, hosts: Array(hosts), code: code)
     }
 }

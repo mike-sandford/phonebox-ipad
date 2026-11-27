@@ -65,6 +65,8 @@ Things the agent shows or does that assume an Android phone (to address later, a
   code. It is now labelled "Android"; an iPad skips it and scans the second one.
 * The agent offers APK updates for the phone app; the iPad avoids them by sending `X-PhoneBox-App: ipad-<version>`.
 * Settings › General "install the phone app" and the USB / adb steps in `setup.sh` (use `--no-phone`).
-* The Standby and Dictation hints in the settings describe Android (keyguard, "Stay awake", the phone's recognizer).
+* The settings on the Mac still speak of "the phone" in most places (they are shared with the Android app). The Standby
+  hint and the pairing dialog mention the iPad. On the iPad itself, in English, the panel says "Mac" for "PC" and
+  "computer" when the agent runs on a Mac, and its Android-only hints (dictation, offline help) are worded for the iPad.
 * "More rows on a tablet" (12 × 10 on the iPad) is not in release 0.9.29 yet; it needs the agent from source or the
   next release.

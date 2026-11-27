@@ -89,14 +89,14 @@ final class Standby: NSObject {
     var summary: String {
         switch mode {
         case "data", "power":
-            let what = mode == "data" ? "when the computer stops answering" : "when the iPad is not charging"
+            let what = mode == "data" ? "when the Mac stops answering" : "when the iPad is not charging"
             var s = "Standby: dark \(what), after \(Int(grace)) s."
             let now = ProcessInfo.processInfo.systemUptime
             if mode == "data" { s += " Last answer \(Int(now - lastAnswer)) s ago." }
             if lostSince > 0 { s += " Gone for \(Int(now - lostSince)) s." }
             return s
         default:
-            return "Standby: off (PhoneBox settings on the computer › Display › Standby)."
+            return "Standby: off (PhoneBox settings on the Mac › Display › Standby)."
         }
     }
 
