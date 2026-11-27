@@ -80,6 +80,21 @@ final class Standby: NSObject {
         if asleep { wakeBrightness = value } else { screen.brightness = value }
     }
 
+    /// For the app menu: what standby does now, so a setting that never arrived is easy to tell apart from a slow one.
+    var summary: String {
+        switch mode {
+        case "data", "power":
+            let what = mode == "data" ? "when the computer stops answering" : "when the iPad is not charging"
+            var s = "Standby: dark \(what), after \(Int(grace)) s."
+            let now = ProcessInfo.processInfo.systemUptime
+            if mode == "data" { s += " Last answer \(Int(now - lastAnswer)) s ago." }
+            if lostSince > 0 { s += " Gone for \(Int(now - lostSince)) s." }
+            return s
+        default:
+            return "Standby: off (PhoneBox settings on the computer › Display › Standby)."
+        }
+    }
+
     /// The brightness the screen has, or comes back to while it is dark.
     func brightness(of screen: UIScreen) -> CGFloat { asleep ? (wakeBrightness ?? screen.brightness) : screen.brightness }
 

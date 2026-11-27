@@ -300,7 +300,7 @@ final class PanelViewController: UIViewController, WKScriptMessageHandler, WKNav
 
     @objc private func showAppMenu(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began, presentedViewController == nil else { return }
-        let menu = UIAlertController(title: "PhoneBox \(HostInfo.appVersion)", message: nil, preferredStyle: .actionSheet)
+        let menu = UIAlertController(title: "PhoneBox \(HostInfo.appVersion)", message: standby.summary, preferredStyle: .actionSheet)
         menu.addAction(UIAlertAction(title: "Scan a pairing QR code", style: .default) { [weak self] _ in self?.scanQRCode() })
         for pc in link.store.all {
             let active = pc.id == link.store.active?.id
