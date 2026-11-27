@@ -11,7 +11,9 @@ import UIKit
 /// Wi-Fi hiccup does not black the panel.
 @MainActor
 final class Standby: NSObject {
-    private static let silence: TimeInterval = 12 // this long with no answer at all => the agent is not reachable
+    // this long with no answer at all => the agent is not reachable. The live stream brings a state every second, so a
+    // few seconds is plenty; the grace period (the agent's setting) is what absorbs a restart or a Wi-Fi hiccup.
+    private static let silence: TimeInterval = 5
     private static let tickEvery: TimeInterval = 2
     private static let peekFor: TimeInterval = 30 // a tap on the dark screen shows the panel this long
 
@@ -38,6 +40,9 @@ final class Standby: NSObject {
         let saved = UserDefaults.standard.integer(forKey: "standbyGrace")
         grace = saved > 0 ? TimeInterval(saved) : 30
         super.init()
+        // the backlight is the iPad's to change (Control Center): while dark, standby puts it back to its lowest
+        NotificationCenter.default.addObserver(self, selector: #selector(brightnessChanged),
+                                               name: UIScreen.brightnessDidChangeNotification, object: nil)
         cover.backgroundColor = .black
         cover.isHidden = true
         cover.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(peek)))
@@ -147,6 +152,11 @@ final class Standby: NSObject {
         cover.isHidden = true
         if let b = wakeBrightness, let screen = host?.window?.windowScene?.screen { screen.brightness = b }
         wakeBrightness = nil
+    }
+
+    @objc private func brightnessChanged(_ note: Notification) {
+        guard asleep, let screen = note.object as? UIScreen ?? host?.window?.windowScene?.screen, screen.brightness > 0 else { return }
+        screen.brightness = 0
     }
 
     @objc private func peek() {
