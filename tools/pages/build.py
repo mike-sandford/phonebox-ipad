@@ -57,7 +57,7 @@ def build(out):
     shutil.copytree(WWW, out / 'panel', dirs_exist_ok=True, ignore=shutil.ignore_patterns('index.html'))
     (out / 'panel' / 'index.html').write_text(panel_html(), encoding='utf-8')
     (out / 'settings' / 'index.html').write_text(settings_html(), encoding='utf-8')
-    # the target of the pairing QR code (Settings › Wi-Fi › Pair a phone over Wi-Fi): hands the link to the app
+    # the target of the pairing QR code (Settings › Wi-Fi › Pair a phone or iPad over Wi-Fi): hands the link to the app
     (out / 'pair').mkdir()
     shutil.copy(PAGES / 'pair.html', out / 'pair' / 'index.html')
     print(f'web demo written to {out}')
